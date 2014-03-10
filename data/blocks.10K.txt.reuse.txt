@@ -1,0 +1,44 @@
+# Size of Block, *1.000 = 10
+
+breakpoint reuse rate between hg18 and:
+mm8	1.23636363636
+rn3	1.54406580494
+canFam2	1.1498470948
+monDom4	1.12280701754
+galGal2	1.13878080415
+
+breakpoint reuse rate between mm8 and:
+hg18	1.23636363636
+rn3	1.54352296093
+canFam2	1.28405201916
+monDom4	1.20360824742
+galGal2	1.22893006575
+
+breakpoint reuse rate between rn3 and:
+hg18	1.54406580494
+mm8	1.54352296093
+canFam2	1.53899082569
+monDom4	1.52247518973
+galGal2	1.5710955711
+
+breakpoint reuse rate between canFam2 and:
+hg18	1.1498470948
+mm8	1.28405201916
+rn3	1.53899082569
+monDom4	1.22166064982
+galGal2	1.17754569191
+
+breakpoint reuse rate between monDom4 and:
+hg18	1.12280701754
+mm8	1.20360824742
+rn3	1.52247518973
+canFam2	1.22166064982
+galGal2	1.17888965045
+
+breakpoint reuse rate between galGal2 and:
+hg18	1.13878080415
+mm8	1.22893006575
+rn3	1.5710955711
+canFam2	1.17754569191
+monDom4	1.17888965045
+
