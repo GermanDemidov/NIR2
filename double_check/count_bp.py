@@ -14,10 +14,10 @@ def count_bp(adj_list_1, adj_list_2):
     result = 0
     set_1, set_2 = set(adj_list_1), set(adj_list_2)
     for adj_l, adj_r in set_1:
-        if (adj_l, adj_r) not in set_2 or (adj_r, adj_l) not in set_2:
+        if (adj_l, adj_r) not in set_2 and (adj_r, adj_l) not in set_2:
             result += 1
     for adj_l, adj_r in set_2:
-        if (adj_l, adj_r) not in set_1 or (adj_r, adj_l) not in set_1:
+        if (adj_l, adj_r) not in set_1 and (adj_r, adj_l) not in set_1:
             result += 1
     return result
 
