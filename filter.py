@@ -34,7 +34,12 @@ def readBlocks( f , genomes ):
                 name = name.replace("+"," ")
                 block = name.split()
                 block.append(sign)
+
+                if len(block) > 3:
+                    block[2] = int(block[2])
+                    block[3] = int(block[3])
                 blocks.append(block)
+
             for element in blocks:
                 m = re.search("([^\.]*)", element[0])
                 genome = m.group(0)
@@ -126,6 +131,7 @@ def outGRIMM(genomes, synthenyBlocks, outFile):
                 representation = []
                 rightOrder = chromosomes[genome][chrName]
                 rightOrder.sort(key = operator.itemgetter(1))
+                # print rightOrder
                 for synBlock in rightOrder:
                     strSign = synBlock[3] + "1"
                     signedName = (synBlock[0] * int(strSign))
@@ -282,7 +288,7 @@ def calculateBreakpointReuse(dictOfPairwiseDist, dictOfPairwiseBreakpoints, geno
 def main(filename, outFilteredFiles = False, distanceMatrixFile = ""):
     synthenyBlocks = {}
     genomes = []
-    
+
     with open(filename) as f:
         for line, blocks in readBlocks(f, genomes):
             synthenyBlocks[line[0]] = blocks
