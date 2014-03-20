@@ -131,7 +131,6 @@ def outGRIMM(genomes, synthenyBlocks, outFile):
                 representation = []
                 rightOrder = chromosomes[genome][chrName]
                 rightOrder.sort(key = operator.itemgetter(1))
-                # print rightOrder
                 for synBlock in rightOrder:
                     strSign = synBlock[3] + "1"
                     signedName = (synBlock[0] * int(strSign))
@@ -158,12 +157,10 @@ def adjacList(formAdjList):
         genAdjList = []
         for chromosome in formAdjList[genome]:
             previousTail = "0"
-
             for tup in formAdjList[genome][chromosome]:
                 genAdjList.append((previousTail, tup[0]))
                 previousTail = tup[1]
             genAdjList.append((previousTail, "0"))
-
         adjList[genome] = Set(genAdjList)
     return adjList
 
@@ -180,9 +177,13 @@ def pairwiseNumberOfBreakpoints(adjList, adjOutFile):
         topString += (str(genome1) + "\t")
         row = (str(genome1) + "\t")
         for genome2 in adjList:
-            uniqueAdjA = len(adjList[genome1] - adjList[genome2])
-            uniqueAdjB = len(adjList[genome2] - adjList[genome1])
-            sumOfUniques = uniqueAdjA + uniqueAdjB
+            sumOfUniques = 0
+            for elem in adjList[genome1]:
+                if elem not in adjList[genome2] and (elem[1], elem[0]) not in adjList[genome2]:
+                    sumOfUniques += 1
+            for elem in adjList[genome2]:
+                if elem not in adjList[genome1] and (elem[1], elem[0]) not in adjList[genome1]:
+                    sumOfUniques += 1
             row += (str(sumOfUniques) + "\t")
             dictOfSpecies[(genome1, genome2)] = sumOfUniques
         row += "\n"
@@ -249,7 +250,6 @@ def parseDistMatrix(synthenyBlocks, genomes, f):
                             counter += 1
                     else:
                         break
-
                 break
             else:
                 continue

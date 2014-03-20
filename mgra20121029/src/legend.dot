@@ -1,0 +1,9 @@
+digraph Legend {
+	node [style=filled];
+	"C"	[fillcolor="#C91F16"];
+	"G"	[fillcolor="#F6E60A"];
+	"H"	[fillcolor="#349B26"];
+	"M"	[fillcolor="#148DC6"];
+	"O"	[fillcolor="#310C5A"];
+	"R"	[fillcolor="#C2452A"];
+}
