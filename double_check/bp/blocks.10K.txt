@@ -1,0 +1,15 @@
+galGal2,mm8:1973
+galGal2,canFam2:1992
+galGal2,rn3:1974
+galGal2,hg18:1976
+galGal2,monDom4:1963
+mm8,canFam2:1977
+mm8,rn3:1959
+mm8,hg18:1961
+mm8,monDom4:1948
+canFam2,rn3:1978
+canFam2,hg18:1980
+canFam2,monDom4:1967
+rn3,hg18:1962
+rn3,monDom4:1949
+hg18,monDom4:1951

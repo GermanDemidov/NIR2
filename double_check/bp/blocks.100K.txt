@@ -1,0 +1,15 @@
+galGal2,mm8:946
+galGal2,canFam2:965
+galGal2,rn3:947
+galGal2,hg18:949
+galGal2,monDom4:936
+mm8,canFam2:955
+mm8,rn3:937
+mm8,hg18:939
+mm8,monDom4:926
+canFam2,rn3:956
+canFam2,hg18:958
+canFam2,monDom4:945
+rn3,hg18:940
+rn3,monDom4:927
+hg18,monDom4:929
