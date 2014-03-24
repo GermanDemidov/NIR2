@@ -64,14 +64,14 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
         tuplesFromSynBlocks[genome] = defaultdict(list)
     for names in synthenyBlocks:
         for lists in synthenyBlocks[names]:
-            tuplesFromSynBlocks[lists[0]][lists[1]].append((int(lists[2]), int(lists[3]), lists[4]))
+            tuplesFromSynBlocks[lists[0]][lists[1]].append(((lists[2]), (lists[3]), lists[4]))
 
     tuplesFromSynBlocksToMerge = {}
     for genome in genomes:
         tuplesFromSynBlocksToMerge[genome] = defaultdict(list)
     for names in synthenyBlocksToMerge:
         for lists in synthenyBlocksToMerge[names]:
-            tuplesFromSynBlocksToMerge[lists[0]][lists[1]].append((int(lists[2]), int(lists[3]), lists[4]))
+            tuplesFromSynBlocksToMerge[lists[0]][lists[1]].append(((lists[2]), (lists[3]), lists[4]))
 
     for genome in genomes:
         for chromosome in tuplesFromSynBlocks[genome]:
