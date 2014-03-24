@@ -92,6 +92,13 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
         for chromosome in tuplesFromSynBlocks[genome]:
             mergedSynBlocks[genome][chromosome] = formMap(tuplesFromSynBlocks[genome][chromosome],
                                                                   tuplesFromSynBlocksToMerge[genome][chromosome])
+            print chromosome
+            for k, v in mergedSynBlocks[genome][chromosome][0].iteritems():
+                print k, v
+            print
+            for k, v in mergedSynBlocks[genome][chromosome][1].iteritems():
+                print k, v
+            print
     return mergedSynBlocks
 
 
@@ -113,14 +120,15 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
                             countAdj += 1
                         else:
                             print "error in len of value"
-                    if countBlocks == 1:
+                    if countBlocks == 1 and countAdj <= 1:
                         M2 += 1
-                    elif countBlocks > 1:
+                    elif countAdj > 1:
+                        M1 += 1
+                    elif countBlocks > 1 or countBlocks == 0:
                         M1 += 1
                     N1 += countAdj
                     
             if len(mergedSynBlocks[genome][chromosome]) > 0:
-
                 aAdjDict = mergedSynBlocks[genome][chromosome][1]
                 for key in aDict:
                     countAdj = 0
@@ -193,23 +201,7 @@ def formMap(lowResGenome, highResGenome):
                 currLow = next(aAdj, done)
             elif len(currLow) == 2:
                 currLow = next(a, done)
-        elif (currHigh[0] == currLow[0] and currHigh[1] == currLow[1]):
-            if len(currLow) == 2 and len(currHigh) == 2:
-                aAdjDict[currLow].append(currHigh)
-                currHigh = next(b, done)
-                currLow = next(a, done)
-                continue
-            elif len(currHigh) == 3 and len(currLow) == 3:
-                aDict[currLow].append(currHigh)
-                currHigh = next(bAdj, done)
-                currLow = next(aAdj, done)
-                continue
-            elif len(currHigh) == 3 and len(currLow) == 2:
-                aAdjDict[currLow].append(currHigh)
-                print currHigh, currLow
-                print "ERROR"
-                currHigh = next(bAdj, done)
-                currLow = next(a, done)
+
         elif (currHigh[0] >= currLow[0] and currHigh[1] <= currLow[1]):
             if len(currHigh) == 3 and len(currLow) == 3:
                 aDict[currLow].append(currHigh)
@@ -223,34 +215,33 @@ def formMap(lowResGenome, highResGenome):
             elif (len(currHigh) == 2 or len(currHigh) == 1) and len(currLow) == 3:
                 aDict[currLow].append(currHigh)
                 currHigh = next(b, done)
+                
         elif (currHigh[0] < currLow[1] and currHigh[1] > currLow[1]):
             if len(currHigh) == 2:
-                """if len(currLow) == 2:
-                    aAdjDict[currLow].append(currHigh)
+                if len(currLow) == 2:
+                    aAdjDict[currLow].append((currHigh[0], currLow[1]))
                 elif len(currLow) == 3:
-                    aDict[currLow].append(currHigh)"""
+                    aDict[currLow].append((currHigh[0], currLow[1]))
                 currHigh = next(b, done)
-
             elif len(currHigh) == 3:
-                """if len(currLow) == 2:
-                    aAdjDict[currLow].append(currHigh)
+                if len(currLow) == 2:
+                    aAdjDict[currLow].append((currHigh[0], currLow[1], currHigh[2]))
                 elif len(currLow) == 3:
-                    aDict[currLow].append(currHigh)"""
+                    aDict[currLow].append((currHigh[0], currLow[1], currHigh[2]))
                 currHigh = next(bAdj, done)
 
         elif (currHigh[0] < currLow[0] and currHigh[1] > currLow[0]):
             if len(currHigh) == 2:
-                """if len(currLow) == 2:
-                    aAdjDict[currLow].append(currHigh)
+                if len(currLow) == 2:
+                    aAdjDict[currLow].append((currLow[0], currHigh[1]))
                 elif len(currLow) == 3:
-                    aDict[currLow].append(currHigh)"""
+                    aDict[currLow].append((currLow[0], currHigh[1]))
                 currHigh = next(b, done)
-
             elif len(currHigh) == 3:
-                """if len(currLow) == 2:
-                    aAdjDict[currLow].append(currHigh)
+                if len(currLow) == 2:
+                    aAdjDict[currLow].append((currLow[0], currHigh[1], currHigh[2]))
                 elif len(currLow) == 3:
-                    aDict[currLow].append(currHigh)"""
+                    aDict[currLow].append((currLow[0], currHigh[1], currHigh[2]))
                 currHigh = next(bAdj, done)
 
         elif currHigh[0] >= currLow[1]:
