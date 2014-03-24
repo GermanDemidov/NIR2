@@ -92,21 +92,22 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
         for chromosome in tuplesFromSynBlocks[genome]:
             mergedSynBlocks[genome][chromosome] = formMap(tuplesFromSynBlocks[genome][chromosome],
                                                                   tuplesFromSynBlocksToMerge[genome][chromosome])
-            print chromosome
-            for k, v in mergedSynBlocks[genome][chromosome][0].iteritems():
-                print k, v
-            print
-            for k, v in mergedSynBlocks[genome][chromosome][1].iteritems():
-                print k, v
-            print
+            if mergedSynBlocks[genome][chromosome][4] == True:
+                print "the block from the above comes from ", genome, chromosome
+            """for k, v in mergedSynBlocks[genome][chromosome][0].iteritems():
+                print k, v"""
+
     return mergedSynBlocks
 
 
 def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
     mergedSynBlocks = merge(synthenyBlocks, synthenyBlocksToMerge, genomes)
+    overlapStats = 0
     for genome in mergedSynBlocks:
+        length = 0
         M1, M2, M3, N1, N2, N3 = (0, 0, 0, 0, 0, 0)
         for chromosome in mergedSynBlocks[genome]:
+
             if len(mergedSynBlocks[genome][chromosome]) > 0:
                 aDict = mergedSynBlocks[genome][chromosome][0]
                 for key in aDict:
@@ -119,35 +120,41 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
                         elif len(values) == 2:
                             countAdj += 1
                         else:
+                            continue
                             print "error in len of value"
-                    if countBlocks == 1 and countAdj <= 1:
+
+                    if countBlocks == 1:
                         M2 += 1
-                    elif countAdj > 1:
-                        M1 += 1
-                    elif countBlocks > 1 or countBlocks == 0:
+                    else:
                         M1 += 1
                     N1 += countAdj
                     
             if len(mergedSynBlocks[genome][chromosome]) > 0:
                 aAdjDict = mergedSynBlocks[genome][chromosome][1]
-                for key in aDict:
+                for key in aAdjDict:
                     countAdj = 0
                     countBlocks = 0
-    
-                    for values in aDict[key]:
+
+                    for values in aAdjDict[key]:
                         if len(values) == 3:
                             countBlocks += 1
                         elif len(values) == 2:
                             countAdj += 1
                         else:
+                            continue
                             print "error in len of value"
+
                     if countBlocks > 1:
                         M3 += 1
                     if countAdj == 1:
                         N2 += 1
                     elif countAdj > 1:
                         N3 += countAdj
+            if len(mergedSynBlocks[genome][chromosome]) > 0:
+                overlapStats += mergedSynBlocks[genome][chromosome][2]
+                anotherOverlap = mergedSynBlocks[genome][chromosome][3]
         print genome
+        print "OverlapStats =", overlapStats
         print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)
 
 
@@ -167,6 +174,7 @@ def formAdj(chromosome, maximum):
 def formMap(lowResGenome, highResGenome):
     """Returns elements of class that lays between the borders of elements of class b. Class b:
     elements of syntheny blocks and adj list"""
+    flag = False
     maximum = 3 * (10 ** 9) # 3 billions of bp length - no one chromosome can reach this limit! =)
     # of course we can compute this value, but...why we need this if we can get it for free? =)
     a = iter(lowResGenome)
@@ -180,11 +188,15 @@ def formMap(lowResGenome, highResGenome):
     currLow = next(aAdj)
     currHigh = next(bAdj)
     done = object()
-    while (currLow is not done) or (currHigh is not done):
+    overlapStats = 0
+    anotherOverlap = 0
+    # TODO: rewrite this part of code with while loops
+    # don't forget to process 1) first part 2) main part 3) end
+    while (currLow[1] != maximum) or (currHigh[1] != maximum):
         if currLow[1] == currHigh[1] == maximum and currHigh[0] >= currLow[0]:
             aAdjDict[currLow].append(currHigh)
             break
-        elif currLow[1] == currHigh[1] == maximum:
+        elif currLow[1] == currHigh[1] == maximum and currHigh[0] < currLow[0]:
             break
         elif currLow[1] == maximum:
             if len(currHigh) == 3:
@@ -196,7 +208,7 @@ def formMap(lowResGenome, highResGenome):
                 if currHigh[0] >= currLow[0]:
                     aAdjDict[currLow].append(currHigh)
                 currHigh = next(b, done)
-        elif currHigh[1] == maximum:
+        elif currHigh[1] == maximum and currLow[1] != maximum:
             if len(currLow) == 3:
                 currLow = next(aAdj, done)
             elif len(currLow) == 2:
@@ -218,30 +230,29 @@ def formMap(lowResGenome, highResGenome):
                 
         elif (currHigh[0] < currLow[1] and currHigh[1] > currLow[1]):
             if len(currHigh) == 2:
-                if len(currLow) == 2:
-                    aAdjDict[currLow].append((currHigh[0], currLow[1]))
-                elif len(currLow) == 3:
-                    aDict[currLow].append((currHigh[0], currLow[1]))
                 currHigh = next(b, done)
+                anotherOverlap += 1
             elif len(currHigh) == 3:
-                if len(currLow) == 2:
-                    aAdjDict[currLow].append((currHigh[0], currLow[1], currHigh[2]))
-                elif len(currLow) == 3:
-                    aDict[currLow].append((currHigh[0], currLow[1], currHigh[2]))
+                if len(currLow) == 3:
+                    flag = True
+                    overlapStats += 1
+                    print currHigh, currLow
+                else:
+                    anotherOverlap += 1
                 currHigh = next(bAdj, done)
 
         elif (currHigh[0] < currLow[0] and currHigh[1] > currLow[0]):
             if len(currHigh) == 2:
-                if len(currLow) == 2:
-                    aAdjDict[currLow].append((currLow[0], currHigh[1]))
-                elif len(currLow) == 3:
-                    aDict[currLow].append((currLow[0], currHigh[1]))
                 currHigh = next(b, done)
+                anotherOverlap += 1
             elif len(currHigh) == 3:
-                if len(currLow) == 2:
-                    aAdjDict[currLow].append((currLow[0], currHigh[1], currHigh[2]))
-                elif len(currLow) == 3:
-                    aDict[currLow].append((currLow[0], currHigh[1], currHigh[2]))
+                if len(currLow) == 3:
+                    flag = True
+                    overlapStats += 1
+                    print currHigh, currLow
+
+                else:
+                    anotherOverlap += 1
                 currHigh = next(bAdj, done)
 
         elif currHigh[0] >= currLow[1]:
@@ -250,7 +261,7 @@ def formMap(lowResGenome, highResGenome):
             elif len(currLow) == 3:
                 currLow = next(aAdj, done)
 
-    return [aDict, aAdjDict]
+    return (aDict, aAdjDict, overlapStats, anotherOverlap, flag)
 
             
 
