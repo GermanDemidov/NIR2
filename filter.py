@@ -263,7 +263,6 @@ def calculateBreakpointReuse(dictOfPairwiseDist, dictOfPairwiseBreakpoints, geno
     #     # xK
     #     species
     #     specie breakReUse1 ...
-    
     numOfK = re.search(r'\d+', filename).group(0)
     line = "# Size of Block, *1.000 = " + str(numOfK) + "\n\n"
     with open(filename + ".reuse.txt", "wb") as f:

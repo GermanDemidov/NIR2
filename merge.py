@@ -4,7 +4,8 @@
 import sys
 import re
 from collections import defaultdict
-
+from optparse import OptionParser
+import optparse
 
 
 def readBlocks( f , genomes ):
@@ -33,13 +34,20 @@ def readBlocks( f , genomes ):
                 name = name.replace("+"," ")
                 block = name.split()
                 block.append(sign)
+
+                if len(block) > 3:
+                    block[2] = int(block[2])
+                    block[3] = int(block[3])
                 blocks.append(block)
+
             for element in blocks:
                 m = re.search("([^\.]*)", element[0])
                 genome = m.group(0)
                 if genome not in genomes:
                     genomes.append(genome)
         yield (line.split(), blocks)
+
+
 
 def sortWithKey(lst):
     lst.sort(key=lambda x: x[0])
@@ -81,70 +89,180 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
         counterOfAddedSynBlocks[genome] = 0
 
     for genome in genomes:
-        print genome
         for chromosome in tuplesFromSynBlocks[genome]:
-            print chromosome
-            print tuplesFromSynBlocks[genome][chromosome]
-            print tuplesFromSynBlocksToMerge[genome][chromosome]
-            it1 = iter(tuplesFromSynBlocks[genome][chromosome])
+            mergedSynBlocks[genome][chromosome] = formMap(tuplesFromSynBlocks[genome][chromosome],
+                                                                  tuplesFromSynBlocksToMerge[genome][chromosome])
+    return mergedSynBlocks
 
-            it2 = iter(tuplesFromSynBlocksToMerge[genome][chromosome])
 
-            counter = 0
-            mergedSynBlocks[genome][chromosome] = list(mergeIters(it1, it2))
-            
-            counterOfAddedSynBlocks[genome] += len(mergedSynBlocks[genome][chromosome]) - len(tuplesFromSynBlocks[genome][chromosome])
-
-            prevEnd = 0
-            for elem in mergedSynBlocks[genome][chromosome]:
-                if elem[0] < prevEnd:
-                    print
-                    print elem, "WOW"
-                    print
-                prevEnd = elem[1]
-            print mergedSynBlocks[genome][chromosome]
-            #print counterOfAddedSynBlocks[genome]
-
+def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
+    mergedSynBlocks = merge(synthenyBlocks, synthenyBlocksToMerge, genomes)
+    for genome in mergedSynBlocks:
+        M1, M2, M3, N1, N2, N3 = (0, 0, 0, 0, 0, 0)
+        for chromosome in mergedSynBlocks[genome]:
+            if len(mergedSynBlocks[genome][chromosome]) > 0:
+                aDict = mergedSynBlocks[genome][chromosome][0]
+                for key in aDict:
+                    countAdj = 0
+                    countBlocks = 0
     
-def mergeIters(b, a):
-    """Merges two iterators a and b, returning a single iterator that yields
-    the elements of a and b in non-decreasing order.  a and b are assumed to each
-    yield their elements in non-decreasing order."""
+                    for values in aDict[key]:
+                        if len(values) == 3:
+                            countBlocks += 1
+                        elif len(values) == 2:
+                            countAdj += 1
+                        else:
+                            print "error in len of value"
+                    if countBlocks == 1:
+                        M2 += 1
+                    elif countBlocks > 1:
+                        M1 += 1
+                    N1 += countAdj
+                    
+            if len(mergedSynBlocks[genome][chromosome]) > 0:
 
+                aAdjDict = mergedSynBlocks[genome][chromosome][1]
+                for key in aDict:
+                    countAdj = 0
+                    countBlocks = 0
+    
+                    for values in aDict[key]:
+                        if len(values) == 3:
+                            countBlocks += 1
+                        elif len(values) == 2:
+                            countAdj += 1
+                        else:
+                            print "error in len of value"
+                    if countBlocks > 1:
+                        M3 += 1
+                    if countAdj == 1:
+                        N2 += 1
+                    elif countAdj > 1:
+                        N3 += countAdj
+        print genome
+        print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)
+
+
+            
+def formAdj(chromosome, maximum):
+    """make an adjacency list from a list of syntheny blocks"""
+    adjList = []
+    start = 0
+    for elem in chromosome:
+        adjList.append((start, elem[0]))
+        start = elem[1]
+    adjList.append((start, maximum))
+    return adjList
+
+
+
+def formMap(lowResGenome, highResGenome):
+    """Returns elements of class that lays between the borders of elements of class b. Class b:
+    elements of syntheny blocks and adj list"""
+    maximum = 3 * (10 ** 9) # 3 billions of bp length - no one chromosome can reach this limit! =)
+    # of course we can compute this value, but...why we need this if we can get it for free? =)
+    a = iter(lowResGenome)
+    b = iter(highResGenome)
+    aAdj = iter(formAdj(lowResGenome, maximum))
+
+    bAdj = iter(formAdj(highResGenome, maximum))
+    aDict = defaultdict(list)
+    aAdjDict = defaultdict(list)
+
+    currLow = next(aAdj)
+    currHigh = next(bAdj)
     done = object()
-    aNext = next(a, done)
-    startOfFree = 0
-    bNext = next(b, done)
-    endOfFree = bNext[0]
+    while (currLow is not done) or (currHigh is not done):
+        if currLow[1] == currHigh[1] == maximum and currHigh[0] >= currLow[0]:
+            aAdjDict[currLow].append(currHigh)
+            break
+        elif currLow[1] == currHigh[1] == maximum:
+            break
+        elif currLow[1] == maximum:
+            if len(currHigh) == 3:
+                if currHigh[0] >= currLow[0]:
+                    aAdjDict[currLow].append(currHigh)
+                currHigh = next(bAdj, done)
 
-    while (aNext is not done) or (bNext is not done):
-        #print aNext, bNext
-        if ((aNext is not done) and (aNext[0] > startOfFree and aNext[1] < endOfFree)):
-            if aNext[0] < endOfFree:
-                aNext = next(a, done)
-            else:
-                yield aNext
-                aNext = next(a, done)
-        elif bNext is not done:
-            while aNext is not done and aNext[0] <= endOfFree:
-                aNext = next(a, done)
-            #print bNext, "second"
-            yield bNext
-            startOfFree = bNext[1]
-            bNext = next(b, done)
-            if bNext is not done:
-                endOfFree = bNext[0]
-            else:
-                endOfFree = startOfFree
-                startOfFree = 1000000000
-        else:
-            if aNext is not done:
-                if aNext[0] > endOfFree:
-                    print "third", aNext
-                    yield aNext
-                    aNext = next(a, done)
-                else:
-                    aNext = next(a, done)
+            elif len(currHigh) == 2:
+                if currHigh[0] >= currLow[0]:
+                    aAdjDict[currLow].append(currHigh)
+                currHigh = next(b, done)
+        elif currHigh[1] == maximum:
+            if len(currLow) == 3:
+                currLow = next(aAdj, done)
+            elif len(currLow) == 2:
+                currLow = next(a, done)
+        elif (currHigh[0] == currLow[0] and currHigh[1] == currLow[1]):
+            if len(currLow) == 2 and len(currHigh) == 2:
+                aAdjDict[currLow].append(currHigh)
+                currHigh = next(b, done)
+                currLow = next(a, done)
+                continue
+            elif len(currHigh) == 3 and len(currLow) == 3:
+                aDict[currLow].append(currHigh)
+                currHigh = next(bAdj, done)
+                currLow = next(aAdj, done)
+                continue
+            elif len(currHigh) == 3 and len(currLow) == 2:
+                aAdjDict[currLow].append(currHigh)
+                print currHigh, currLow
+                print "ERROR"
+                currHigh = next(bAdj, done)
+                currLow = next(a, done)
+        elif (currHigh[0] >= currLow[0] and currHigh[1] <= currLow[1]):
+            if len(currHigh) == 3 and len(currLow) == 3:
+                aDict[currLow].append(currHigh)
+                currHigh = next(bAdj, done)
+            elif len(currHigh) == 2 and len(currLow) == 2:
+                aAdjDict[currLow].append(currHigh)
+                currHigh = next(b, done)
+            elif len(currHigh) == 3 and len(currLow) == 2:
+                aAdjDict[currLow].append(currHigh)
+                currHigh = next(bAdj, done)
+            elif (len(currHigh) == 2 or len(currHigh) == 1) and len(currLow) == 3:
+                aDict[currLow].append(currHigh)
+                currHigh = next(b, done)
+        elif (currHigh[0] < currLow[1] and currHigh[1] > currLow[1]):
+            if len(currHigh) == 2:
+                """if len(currLow) == 2:
+                    aAdjDict[currLow].append(currHigh)
+                elif len(currLow) == 3:
+                    aDict[currLow].append(currHigh)"""
+                currHigh = next(b, done)
+
+            elif len(currHigh) == 3:
+                """if len(currLow) == 2:
+                    aAdjDict[currLow].append(currHigh)
+                elif len(currLow) == 3:
+                    aDict[currLow].append(currHigh)"""
+                currHigh = next(bAdj, done)
+
+        elif (currHigh[0] < currLow[0] and currHigh[1] > currLow[0]):
+            if len(currHigh) == 2:
+                """if len(currLow) == 2:
+                    aAdjDict[currLow].append(currHigh)
+                elif len(currLow) == 3:
+                    aDict[currLow].append(currHigh)"""
+                currHigh = next(b, done)
+
+            elif len(currHigh) == 3:
+                """if len(currLow) == 2:
+                    aAdjDict[currLow].append(currHigh)
+                elif len(currLow) == 3:
+                    aDict[currLow].append(currHigh)"""
+                currHigh = next(bAdj, done)
+
+        elif currHigh[0] >= currLow[1]:
+            if len(currLow) == 2:
+                currLow = next(a, done)
+            elif len(currLow) == 3:
+                currLow = next(aAdj, done)
+
+    return [aDict, aAdjDict]
+
+            
+
 
 def main(filename, fileToMerge):
     synthenyBlocks = {}
@@ -158,16 +276,18 @@ def main(filename, fileToMerge):
         for line, blocks in readBlocks(f, genomes):
             synthenyBlocksToMerge[line[0]] = blocks
 
-    merge(synthenyBlocks, synthenyBlocksToMerge, genomes)
+    countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes)
 
 
+if __name__ == "__main__":
 
-print '''Please, enter 2 files which you want to merge.
-Second file should be in higher resolution than first.
-Please, remember: your data should be filtered
-(i.e. contains no duplications or deletions).
-'''
-cmdParams = sys.argv[1:]
-filename = cmdParams[0]
-fileToMerge = cmdParams[1]
-main(filename, fileToMerge)
+    parser = OptionParser(version = "%prog 1.0", conflict_handler="error", description =
+                            """This script merges one file with high-resolution syntheny
+                            blocks to another file with low-resolution syntheny blocks.""")
+
+    parser.add_option("-f", "--file", dest="filename", help="file with syntheny blocks of low resolution", metavar="FILE")
+    parser.add_option("-m", "--merge", dest="fileToMerge", help="file with syntheny blocks of high resolution", metavar="FILE")
+
+    options, args = parser.parse_args()
+    
+    main(options.filename, options.fileToMerge)
