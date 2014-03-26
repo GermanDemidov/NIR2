@@ -90,12 +90,24 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
 
     for genome in genomes:
         for chromosome in tuplesFromSynBlocks[genome]:
+            print
+            print chromosome
+            print "Synteny blocks: "
+            print tuplesFromSynBlocks[genome][chromosome]
+            print "Adjacencies: "
+            print formAdj(tuplesFromSynBlocks[genome][chromosome], "infty")
+            print "Synteny blocks of high resolution "
+            print tuplesFromSynBlocksToMerge[genome][chromosome]
+            print "Adjacencies of high resolution: "
+            print formAdj(tuplesFromSynBlocksToMerge[genome][chromosome], "infty")
             mergedSynBlocks[genome][chromosome] = formMap(tuplesFromSynBlocks[genome][chromosome],
                                                                   tuplesFromSynBlocksToMerge[genome][chromosome])
-            if mergedSynBlocks[genome][chromosome][4] == True:
-                print "the block from the above comes from ", genome, chromosome
-            """for k, v in mergedSynBlocks[genome][chromosome][0].iteritems():
-                print k, v"""
+            print "Each synteny block of low res contains (of high res): "
+            for k, v in mergedSynBlocks[genome][chromosome][0].iteritems():
+                print k, v
+            print "Each adjacencie of low res contains (of high res): "
+            for k, v in mergedSynBlocks[genome][chromosome][1].iteritems():
+                print k, v
 
     return mergedSynBlocks
 
@@ -175,7 +187,7 @@ def formMap(lowResGenome, highResGenome):
     """Returns elements of class that lays between the borders of elements of class b. Class b:
     elements of syntheny blocks and adj list"""
     flag = False
-    maximum = 3 * (10 ** 9) # 3 billions of bp length - no one chromosome can reach this limit! =)
+    maximum = "infty" #3 * (10 ** 9) # 3 billions of bp length - no one chromosome can reach this limit! =)
     # of course we can compute this value, but...why we need this if we can get it for free? =)
     a = iter(lowResGenome)
     b = iter(highResGenome)
@@ -192,7 +204,7 @@ def formMap(lowResGenome, highResGenome):
     anotherOverlap = 0
     # TODO: rewrite this part of code with while loops
     # don't forget to process 1) first part 2) main part 3) end
-    while (currLow[1] != maximum) or (currHigh[1] != maximum):
+    while (currLow[1] is not done) or (currHigh[1] is not done):
         if currLow[1] == currHigh[1] == maximum and currHigh[0] >= currLow[0]:
             aAdjDict[currLow].append(currHigh)
             break
@@ -232,13 +244,16 @@ def formMap(lowResGenome, highResGenome):
             if len(currHigh) == 2:
                 currHigh = next(b, done)
                 anotherOverlap += 1
+
             elif len(currHigh) == 3:
                 if len(currLow) == 3:
                     flag = True
                     overlapStats += 1
-                    print currHigh, currLow
+                    # print currHigh, currLow
                 else:
-                    anotherOverlap += 1
+                    flag = True
+                    overlapStats += 1
+                    # print currHigh, currLow
                 currHigh = next(bAdj, done)
 
         elif (currHigh[0] < currLow[0] and currHigh[1] > currLow[0]):
@@ -249,7 +264,7 @@ def formMap(lowResGenome, highResGenome):
                 if len(currLow) == 3:
                     flag = True
                     overlapStats += 1
-                    print currHigh, currLow
+                    # print currHigh, currLow
 
                 else:
                     anotherOverlap += 1
