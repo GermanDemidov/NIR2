@@ -95,8 +95,8 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
     for genome in genomes:
         # print genome
         for chromosome in tuplesFromSynBlocks[genome]:
-            print chromosome
             """
+            
             print "Synteny blocks: "
             print tuplesFromSynBlocks[genome][chromosome]
             print "Adjacencies: "
@@ -131,11 +131,14 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
         fake = 0
         totlen = 0
         for chromosome in mergedSynBlocks[genome]:
-                print chromosome
-                M1, M2, M3, N1, N2, N3 = (0, 0, 0, 0, 0, 0)
-                fake = 0
+                #M1, M2, M3, N1, N2, N3 = (0, 0, 0, 0, 0, 0)
+                #fake = 0
                 aDict, aAdjDict, tmpOverlap, fakesNum = mergedSynBlocks[genome][chromosome]
-                print fakesNum, "FAKES NUM!"
+                """print
+                print aDict
+                print aAdjDict
+                print"""
+                
                 totlen += len(aDict)
                 fake += fakesNum
                 for key in aDict:
@@ -148,9 +151,13 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
                         if len(values) == 3:
                             countBlocks += 1
                         elif len(values) == 2:
-                            tmpAdj = values
-                            countAdj += 1
-                            if values[0] >= key[0] and values[1] <= key[1]:
+                            if values[1] - values[0] != 0:
+                                tmpAdj = values
+                            if values[1] - values[0] != 0:
+                                countAdj += 1
+                            if values[0] > key[0] and values[1] < key[1]:# and values[1] - values[0] != 0:
+                                countInnerAdj += 1
+                            elif values[0] >= key[0] and values[1] <= key[1] and values[1] - values[0] != 0:
                                 countInnerAdj += 1
                         else:
                             print "error in len of value"
@@ -162,8 +169,8 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
                         M2 += 1
                     elif countBlocks == 0:
                         print "Hmmm..."
-                        print mergedSynBlocks[genome][chromosome]
-                        print key, aDict[key]
+                        print key
+                        print aDict[key]
                     else:
                         print key
                     N1 += countInnerAdj
@@ -177,33 +184,37 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
                     for values in aAdjDict[key]:
                         if len(values) == 3:
                             countBlocks += 1
-                            if values[0] > key[0] and values[1] < key[1]:
+                            if values[0] >= key[0] and values[1] <= key[1] and values[1] - values[0] != 0:
                                 flagOfDivisionByBlock = True
                         elif len(values) == 2:
                             if values[1] < 3000000000:
                                 tmpAdj = values
-                            countAdj += 1
+                            if values[1] - values[0] != 0:
+                                countAdj += 1
                         else:
                             continue
                             print "error in len of value"
+                    if countBlocks >= 1 and countAdj == 0:
+                        countAdj += 2
                     if flagOfDivisionByBlock == True:
                         M3 += 1
                     if countAdj == 0 or countAdj == 1:# and countBlocks == 0:
                         N2 += 1
-                    elif (countAdj > 1 or countBlocks > 1 or
-                          (countAdj >= 1 and countBlocks >= 1)):
+                    elif countBlocks >= 1:
+                        """(countAdj > 1 or countBlocks > 1 or
+                          (countAdj >= 1 and countBlocks >= 1)):"""
                         N3 += countAdj
-                print "Fake: ", fake
+                """print "Fake: ", fake
                 # 18, 15, 11, 1, 5,
-                print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3
-                print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)
+                print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3 - fake
+                print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)"""
                 
                         
                 overlapStats += len(tmpOverlap)
         print genome
         print totlen
         print "Fake: ", fake
-        print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3
+        print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3 - fake
         print "Num of synteny blocks of low res that has overlaps =", overlapStats
         print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)
 

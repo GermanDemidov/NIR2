@@ -33,7 +33,6 @@ def appending(aDict, aAdjDict, currentLow, currentHigh):
 
 
 def isInside(block, med):
-    
     if len(block) == 3 and block[0] <= med and block[1] >= med:
         return True
     elif len(block) == 2 and block[0] < med and block[1] > med:
@@ -58,11 +57,13 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
     while k < len(lowResGenome):
         if k < len(lowResGenome):
             currentLow = lowResGenome[k]
+
         dictOfFakeSynBlocks[currentLow]
-        
+            
         for currentHigh in highResGenome:
             med = (currentHigh[0] + currentHigh[1]) / 2
             if isInside(currentLow, med):
+
                 dictOfFakeSynBlocks[currentLow] = True
 
         l += 1
@@ -70,6 +71,7 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
     for key in sorted(dictOfFakeSynBlocks.iterkeys()):
         if dictOfFakeSynBlocks[key] == False:
             listOfFakes.append(key)
+
     m = 0
     newHighRes = []
     filteredHighRes = []
@@ -84,24 +86,41 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
             if i > 0:
                 prevElem = newHighRes[i-1]
             else:
-                prevElem = (0, 0)
+                prevElem = (0, 0, "+")
             if i < len(newHighRes) - 1:
                 nextElem = newHighRes[i+1]
             else:
-                nextElem = (maximum, maximum)
+                nextElem = (maximum, maximum, "+")
             if elem[0] < prevElem[1] and elem[1] > nextElem[0]:
+
                 continue
+            elif elem[1] < nextElem[0]:
+                filteredHighRes.append(elem)
             elif elem in listOfFakes:
                 filteredHighRes.append(elem)
-            elif elem[1] >= nextElem[0] and nextElem in listOfFakes:
+            elif elem[1] >= nextElem[0]: #and nextElem in listOfFakes:
                 filteredHighRes.append((elem[0], nextElem[0], elem[2]))
-            elif elem[0] <= prevElem[1] and prevElem in listOfFakes:
+            elif elem[0] <= prevElem[1]: #and prevElem in listOfFakes:
                 filteredHighRes.append((prevElem[1], elem[1], elem[2]))
             elif elem[0] >= prevElem[1] and elem[1] <= nextElem[0]:
                 filteredHighRes.append(elem)
+            else:
+                print elem
+                print nextElem, "NEXT"
+                elem = list(elem)
+                elem[0] = nextElem[0]
+                filteredHighRes.append(tuple(elem))
+                """print elem
+                print nextElem
+                print newHighRes"""
+        if len(filteredHighRes) != len(highResGenome) + len(listOfFakes):
+            print "WOW"
+            print len(filteredHighRes)
+            print len(highResGenome), len(listOfFakes)
         
         highRes = formFullMapAdj(filteredHighRes, maximum)
         length2 = len(highRes)
+
                     
 
     aDict = defaultdict(list)
@@ -132,13 +151,14 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
             continue
 
         currentHigh = highRes[j]
+
+        med = (currentHigh[0] + currentHigh[1]) / 2
         if len(currentHigh) == 2 and currentHigh[1] - currentHigh[0] == 0\
            and isInside(currentLow, med):
             appending(aDict, aAdjDict, currentLow, currentHigh)
             j += 1
             continue
         #print currentLow, currentHigh
-        med = (currentHigh[0] + currentHigh[1]) / 2
 
         if currentHigh[0] >= currentLow[1]:
             i += 1
@@ -150,7 +170,7 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
             j += 1
 
         # if the block of low resolution lays within the block of high resolution    
-        elif currentLow[0] >= currentHigh[0] and currentLow[1] <= currentHigh[1]:
+        elif currentLow[0] >= currentHigh[0] and currentLow[1] < currentHigh[1]:
             i += 1
             if isInside(currentLow, med):
                 appending(aDict, aAdjDict, currentLow, currentHigh)
@@ -164,6 +184,7 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
                 appending(aDict, aAdjDict, currentLow, currentHigh)
             if currentLow[1] == currentHigh[1]:
                 j += 1
+                i += 1
                 
 
 
