@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from optparse import OptionParser
 import optparse
-
+from mapofblocks import *
 
 def readBlocks( f , genomes ):
     # generator function
@@ -66,13 +66,15 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
         for lists in synthenyBlocks[names]:
             tuplesFromSynBlocks[lists[0]][lists[1]].append(((lists[2]), (lists[3]), lists[4]))
 
+
+    sixDimVect = {}
     tuplesFromSynBlocksToMerge = {}
     for genome in genomes:
         tuplesFromSynBlocksToMerge[genome] = defaultdict(list)
     for names in synthenyBlocksToMerge:
         for lists in synthenyBlocksToMerge[names]:
             tuplesFromSynBlocksToMerge[lists[0]][lists[1]].append(((lists[2]), (lists[3]), lists[4]))
-
+            sixDimVect[lists[0]] = ["" for i in range(6)]
     for genome in genomes:
         for chromosome in tuplesFromSynBlocks[genome]:
             sortWithKey(tuplesFromSynBlocks[genome][chromosome])
@@ -83,15 +85,18 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
     # in merged synBlocks we want to write chromosome cart (to convert it in
     # GRIMM format)
     mergedSynBlocks = {}
+    softMergedSynBlocks = {}
     counterOfAddedSynBlocks = {}
     for genome in genomes:
         mergedSynBlocks[genome] = defaultdict(list)
+        softMergedSynBlocks[genome] = defaultdict(list)
         counterOfAddedSynBlocks[genome] = 0
 
     for genome in genomes:
+        # print genome
         for chromosome in tuplesFromSynBlocks[genome]:
-            print
             print chromosome
+            """
             print "Synteny blocks: "
             print tuplesFromSynBlocks[genome][chromosome]
             print "Adjacencies: "
@@ -99,186 +104,112 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
             print "Synteny blocks of high resolution "
             print tuplesFromSynBlocksToMerge[genome][chromosome]
             print "Adjacencies of high resolution: "
-            print formAdj(tuplesFromSynBlocksToMerge[genome][chromosome], "infty")
-            mergedSynBlocks[genome][chromosome] = formMap(tuplesFromSynBlocks[genome][chromosome],
-                                                                  tuplesFromSynBlocksToMerge[genome][chromosome])
-            print "Each synteny block of low res contains (of high res): "
-            for k, v in mergedSynBlocks[genome][chromosome][0].iteritems():
+            print formAdj(tuplesFromSynBlocksToMerge[genome][chromosome], "infty")"""
+            softMergedSynBlocks[genome][chromosome] = formMapSmooth(tuplesFromSynBlocks[genome][chromosome],
+                                                                  tuplesFromSynBlocksToMerge[genome][chromosome],
+                                                                    sixDimVect)
+            # mergedSynBlocks[genome][chromosome] = formMapStrict(tuplesFromSynBlocks[genome][chromosome],
+            #                                                      tuplesFromSynBlocksToMerge[genome][chromosome])
+
+
+            """print "Each synteny block of low res contains (of high res): "
+            for k, v in softMergedSynBlocks[genome][chromosome][0].iteritems():
                 print k, v
             print "Each adjacencie of low res contains (of high res): "
-            for k, v in mergedSynBlocks[genome][chromosome][1].iteritems():
-                print k, v
-
-    return mergedSynBlocks
+            for k, v in softMergedSynBlocks[genome][chromosome][1].iteritems():
+                print k, v"""
+            
+    return softMergedSynBlocks
 
 
 def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
     mergedSynBlocks = merge(synthenyBlocks, synthenyBlocksToMerge, genomes)
-    overlapStats = 0
     for genome in mergedSynBlocks:
+        overlapStats = 0
         length = 0
         M1, M2, M3, N1, N2, N3 = (0, 0, 0, 0, 0, 0)
+        fake = 0
+        totlen = 0
         for chromosome in mergedSynBlocks[genome]:
-
-            if len(mergedSynBlocks[genome][chromosome]) > 0:
-                aDict = mergedSynBlocks[genome][chromosome][0]
+                print chromosome
+                M1, M2, M3, N1, N2, N3 = (0, 0, 0, 0, 0, 0)
+                fake = 0
+                aDict, aAdjDict, tmpOverlap, fakesNum = mergedSynBlocks[genome][chromosome]
+                print fakesNum, "FAKES NUM!"
+                totlen += len(aDict)
+                fake += fakesNum
                 for key in aDict:
                     countAdj = 0
+                    countInnerAdj = 0
                     countBlocks = 0
-    
+                    tmpAdj = (-100,0)
+                    
                     for values in aDict[key]:
                         if len(values) == 3:
                             countBlocks += 1
                         elif len(values) == 2:
+                            tmpAdj = values
                             countAdj += 1
+                            if values[0] >= key[0] and values[1] <= key[1]:
+                                countInnerAdj += 1
                         else:
-                            continue
                             print "error in len of value"
 
-                    if countBlocks == 1:
-                        M2 += 1
-                    else:
+
+                    if countBlocks > 1 or countAdj > 2 or tmpAdj[0] > key[0]:
                         M1 += 1
-                    N1 += countAdj
+                    elif countBlocks == 1:
+                        M2 += 1
+                    elif countBlocks == 0:
+                        print "Hmmm..."
+                        print mergedSynBlocks[genome][chromosome]
+                        print key, aDict[key]
+                    else:
+                        print key
+                    N1 += countInnerAdj
                     
-            if len(mergedSynBlocks[genome][chromosome]) > 0:
-                aAdjDict = mergedSynBlocks[genome][chromosome][1]
                 for key in aAdjDict:
                     countAdj = 0
                     countBlocks = 0
+                    flagOfDivisionByBlock = False
+                    tmpAdj = ()
 
                     for values in aAdjDict[key]:
                         if len(values) == 3:
                             countBlocks += 1
+                            if values[0] > key[0] and values[1] < key[1]:
+                                flagOfDivisionByBlock = True
                         elif len(values) == 2:
+                            if values[1] < 3000000000:
+                                tmpAdj = values
                             countAdj += 1
                         else:
                             continue
                             print "error in len of value"
-
-                    if countBlocks > 1:
+                    if flagOfDivisionByBlock == True:
                         M3 += 1
-                    if countAdj == 1:
+                    if countAdj == 0 or countAdj == 1:# and countBlocks == 0:
                         N2 += 1
-                    elif countAdj > 1:
+                    elif (countAdj > 1 or countBlocks > 1 or
+                          (countAdj >= 1 and countBlocks >= 1)):
                         N3 += countAdj
-            if len(mergedSynBlocks[genome][chromosome]) > 0:
-                overlapStats += mergedSynBlocks[genome][chromosome][2]
-                anotherOverlap = mergedSynBlocks[genome][chromosome][3]
+                print "Fake: ", fake
+                # 18, 15, 11, 1, 5,
+                print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3
+                print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)
+                
+                        
+                overlapStats += len(tmpOverlap)
         print genome
-        print "OverlapStats =", overlapStats
+        print totlen
+        print "Fake: ", fake
+        print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3
+        print "Num of synteny blocks of low res that has overlaps =", overlapStats
         print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)
 
 
-            
-def formAdj(chromosome, maximum):
-    """make an adjacency list from a list of syntheny blocks"""
-    adjList = []
-    start = 0
-    for elem in chromosome:
-        adjList.append((start, elem[0]))
-        start = elem[1]
-    adjList.append((start, maximum))
-    return adjList
 
 
-
-def formMap(lowResGenome, highResGenome):
-    """Returns elements of class that lays between the borders of elements of class b. Class b:
-    elements of syntheny blocks and adj list"""
-    flag = False
-    maximum = "infty" #3 * (10 ** 9) # 3 billions of bp length - no one chromosome can reach this limit! =)
-    # of course we can compute this value, but...why we need this if we can get it for free? =)
-    a = iter(lowResGenome)
-    b = iter(highResGenome)
-    aAdj = iter(formAdj(lowResGenome, maximum))
-
-    bAdj = iter(formAdj(highResGenome, maximum))
-    aDict = defaultdict(list)
-    aAdjDict = defaultdict(list)
-
-    currLow = next(aAdj)
-    currHigh = next(bAdj)
-    done = object()
-    overlapStats = 0
-    anotherOverlap = 0
-    # TODO: rewrite this part of code with while loops
-    # don't forget to process 1) first part 2) main part 3) end
-    while (currLow[1] is not done) or (currHigh[1] is not done):
-        if currLow[1] == currHigh[1] == maximum and currHigh[0] >= currLow[0]:
-            aAdjDict[currLow].append(currHigh)
-            break
-        elif currLow[1] == currHigh[1] == maximum and currHigh[0] < currLow[0]:
-            break
-        elif currLow[1] == maximum:
-            if len(currHigh) == 3:
-                if currHigh[0] >= currLow[0]:
-                    aAdjDict[currLow].append(currHigh)
-                currHigh = next(bAdj, done)
-
-            elif len(currHigh) == 2:
-                if currHigh[0] >= currLow[0]:
-                    aAdjDict[currLow].append(currHigh)
-                currHigh = next(b, done)
-        elif currHigh[1] == maximum and currLow[1] != maximum:
-            if len(currLow) == 3:
-                currLow = next(aAdj, done)
-            elif len(currLow) == 2:
-                currLow = next(a, done)
-
-        elif (currHigh[0] >= currLow[0] and currHigh[1] <= currLow[1]):
-            if len(currHigh) == 3 and len(currLow) == 3:
-                aDict[currLow].append(currHigh)
-                currHigh = next(bAdj, done)
-            elif len(currHigh) == 2 and len(currLow) == 2:
-                aAdjDict[currLow].append(currHigh)
-                currHigh = next(b, done)
-            elif len(currHigh) == 3 and len(currLow) == 2:
-                aAdjDict[currLow].append(currHigh)
-                currHigh = next(bAdj, done)
-            elif (len(currHigh) == 2 or len(currHigh) == 1) and len(currLow) == 3:
-                aDict[currLow].append(currHigh)
-                currHigh = next(b, done)
-                
-        elif (currHigh[0] < currLow[1] and currHigh[1] > currLow[1]):
-            if len(currHigh) == 2:
-                currHigh = next(b, done)
-                anotherOverlap += 1
-
-            elif len(currHigh) == 3:
-                if len(currLow) == 3:
-                    flag = True
-                    overlapStats += 1
-                    # print currHigh, currLow
-                else:
-                    flag = True
-                    overlapStats += 1
-                    # print currHigh, currLow
-                currHigh = next(bAdj, done)
-
-        elif (currHigh[0] < currLow[0] and currHigh[1] > currLow[0]):
-            if len(currHigh) == 2:
-                currHigh = next(b, done)
-                anotherOverlap += 1
-            elif len(currHigh) == 3:
-                if len(currLow) == 3:
-                    flag = True
-                    overlapStats += 1
-                    # print currHigh, currLow
-
-                else:
-                    anotherOverlap += 1
-                currHigh = next(bAdj, done)
-
-        elif currHigh[0] >= currLow[1]:
-            if len(currLow) == 2:
-                currLow = next(a, done)
-            elif len(currLow) == 3:
-                currLow = next(aAdj, done)
-
-    return (aDict, aAdjDict, overlapStats, anotherOverlap, flag)
-
-            
 
 
 def main(filename, fileToMerge):
