@@ -55,28 +55,21 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
     listOfFakes = []
     k = 0
     l = 0
-    while k < len(lowResGenome) or l < len(highResGenome):
+    while k < len(lowResGenome):
         if k < len(lowResGenome):
             currentLow = lowResGenome[k]
         dictOfFakeSynBlocks[currentLow]
-        if l < len(highResGenome):
-            currentHigh = highResGenome[l]
         
-        while currentHigh[0] < currentLow[1]:
+        for currentHigh in highResGenome:
             med = (currentHigh[0] + currentHigh[1]) / 2
             if isInside(currentLow, med):
                 dictOfFakeSynBlocks[currentLow] = True
-            l += 1
-            if l < len(highResGenome):
-                currentHigh = highResGenome[l]
-            else:
-                break
+
         l += 1
         k += 1
     for key in sorted(dictOfFakeSynBlocks.iterkeys()):
         if dictOfFakeSynBlocks[key] == False:
             listOfFakes.append(key)
-        
     m = 0
     newHighRes = []
     filteredHighRes = []
@@ -101,7 +94,7 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
             elif elem in listOfFakes:
                 filteredHighRes.append(elem)
             elif elem[1] >= nextElem[0] and nextElem in listOfFakes:
-                filteredHighRes.append((elem[0], nextElem[1], elem[2]))
+                filteredHighRes.append((elem[0], nextElem[0], elem[2]))
             elif elem[0] <= prevElem[1] and prevElem in listOfFakes:
                 filteredHighRes.append((prevElem[1], elem[1], elem[2]))
             elif elem[0] >= prevElem[1] and elem[1] <= nextElem[0]:
@@ -126,7 +119,7 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
     appending(aDict, aAdjDict, currentLow, currentLow)
     j += 1
 
-    while i < length1 - 1 and j < length2:
+    while i < length1 and j < length2:
         if len(currentLow) == 3 and currentLow not in aDict:
             aDict[currentLow]
         if len(currentLow) == 2 and currentLow not in aAdjDict:
