@@ -63,7 +63,6 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
         for currentHigh in highResGenome:
             med = (currentHigh[0] + currentHigh[1]) / 2
             if isInside(currentLow, med):
-
                 dictOfFakeSynBlocks[currentLow] = True
 
         l += 1
@@ -75,7 +74,7 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
     m = 0
     newHighRes = []
     filteredHighRes = []
-    if len(listOfFakes) > 0:
+    """if len(listOfFakes) > 0:
         newHighRes.extend(listOfFakes)
         newHighRes.extend(highResGenome)
         newHighRes.sort(key=lambda x: x[0])
@@ -92,7 +91,6 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
             else:
                 nextElem = (maximum, maximum, "+")
             if elem[0] < prevElem[1] and elem[1] > nextElem[0]:
-
                 continue
             elif elem[1] < nextElem[0]:
                 filteredHighRes.append(elem)
@@ -105,21 +103,21 @@ def formMapSmooth(lowResGenome, highResGenome, sixDimVect):
             elif elem[0] >= prevElem[1] and elem[1] <= nextElem[0]:
                 filteredHighRes.append(elem)
             else:
-                print elem
-                print nextElem, "NEXT"
+                #print elem
+                #print nextElem, "NEXT"
                 elem = list(elem)
                 elem[0] = nextElem[0]
                 filteredHighRes.append(tuple(elem))
-                """print elem
+                print elem
                 print nextElem
-                print newHighRes"""
+                print newHighRes
         if len(filteredHighRes) != len(highResGenome) + len(listOfFakes):
             print "WOW"
             print len(filteredHighRes)
             print len(highResGenome), len(listOfFakes)
         
         highRes = formFullMapAdj(filteredHighRes, maximum)
-        length2 = len(highRes)
+        length2 = len(highRes)"""
 
                     
 

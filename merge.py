@@ -7,6 +7,7 @@ from collections import defaultdict
 from optparse import OptionParser
 import optparse
 from mapofblocks import *
+from sets import Set
 
 def readBlocks( f , genomes ):
     # generator function
@@ -59,11 +60,17 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
     out: statistics in table format: num of synblocks + num of merged synblocks
         and merged synBlocks in file
     '''
+
+    nameOfBlocks = {}
+    nameOfHighResBlocks = {}
+    nameAndBack = {}
     tuplesFromSynBlocks = {}
     for genome in genomes:
         tuplesFromSynBlocks[genome] = defaultdict(list)
     for names in synthenyBlocks:
         for lists in synthenyBlocks[names]:
+            nameOfBlocks[((lists[2]), (lists[3]), lists[4])] = names
+            nameAndBack[names] = ((lists[2]), (lists[3]), lists[4])
             tuplesFromSynBlocks[lists[0]][lists[1]].append(((lists[2]), (lists[3]), lists[4]))
 
 
@@ -74,6 +81,7 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
     for names in synthenyBlocksToMerge:
         for lists in synthenyBlocksToMerge[names]:
             tuplesFromSynBlocksToMerge[lists[0]][lists[1]].append(((lists[2]), (lists[3]), lists[4]))
+            nameOfHighResBlocks[((lists[2]), (lists[3]), lists[4])] = names
             sixDimVect[lists[0]] = ["" for i in range(6)]
     for genome in genomes:
         for chromosome in tuplesFromSynBlocks[genome]:
@@ -93,7 +101,6 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
         counterOfAddedSynBlocks[genome] = 0
 
     for genome in genomes:
-        # print genome
         for chromosome in tuplesFromSynBlocks[genome]:
             """
             
@@ -119,12 +126,15 @@ def merge(synthenyBlocks, synthenyBlocksToMerge, genomes):
             for k, v in softMergedSynBlocks[genome][chromosome][1].iteritems():
                 print k, v"""
             
-    return softMergedSynBlocks
+    return softMergedSynBlocks, nameOfBlocks, nameOfHighResBlocks, nameAndBack
 
 
 def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
-    mergedSynBlocks = merge(synthenyBlocks, synthenyBlocksToMerge, genomes)
+    mergedSynBlocks, nameOfBlocks, nameOfHighResBlocks, nameAndBack = merge(synthenyBlocks, synthenyBlocksToMerge, genomes)
+    sixDimVect = defaultdict(list)
+    dictOfSets = {}
     for genome in mergedSynBlocks:
+        dictOfSets[genome] = Set()
         overlapStats = 0
         length = 0
         M1, M2, M3, N1, N2, N3 = (0, 0, 0, 0, 0, 0)
@@ -165,14 +175,20 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
 
                     if countBlocks > 1 or countAdj > 2 or tmpAdj[0] > key[0]:
                         M1 += 1
+                        if key in nameOfBlocks:
+                            dictOfSets[genome].add(nameOfBlocks[key])
+
                     elif countBlocks == 1:
                         M2 += 1
-                    elif countBlocks == 0:
+                        if key in nameOfBlocks and key[2] != "F":
+                            dictOfSets[genome].add(nameOfBlocks[key])
+
+                    """elif countBlocks == 0:
                         print "Hmmm..."
                         print key
                         print aDict[key]
                     else:
-                        print key
+                        print key"""
                     N1 += countInnerAdj
                     
                 for key in aAdjDict:
@@ -204,6 +220,7 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
                         """(countAdj > 1 or countBlocks > 1 or
                           (countAdj >= 1 and countBlocks >= 1)):"""
                         N3 += countAdj
+
                 """print "Fake: ", fake
                 # 18, 15, 11, 1, 5,
                 print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3 - fake
@@ -211,12 +228,49 @@ def countStatistics(synthenyBlocks, synthenyBlocksToMerge, genomes):
                 
                         
                 overlapStats += len(tmpOverlap)
+        print "length for the genome", genome, " : ", len(dictOfSets[genome])
         print genome
         print totlen
         print "Fake: ", fake
         print "Number of blocks in high: ", M1 + N1 + M2 + N3 - M3 - fake
         print "Num of synteny blocks of low res that has overlaps =", overlapStats
         print 'M1 = {0}, M2 = {1}, M3 = {2}, N1 = {3}, N2 = {4}, N3 = {5}'.format(M1, M2, M3, N1, N2, N3)
+        
+    newSet = Set()
+    for genome in dictOfSets:
+        newSet |= dictOfSets[genome]
+    print newSet
+    for genome in dictOfSets:
+        newSet &= dictOfSets[genome]
+    print newSet
+
+    for elem in newSet:
+        newBlock = nameAndBack[elem]
+        setForBlock = Set()
+        for genome in mergedSynBlocks:
+            setForGenomeAndBlock = Set()
+            for chromosome in mergedSynBlocks[genome]:
+                aDict, aAdjDict, tmpOverlap, fakesNum = mergedSynBlocks[genome][chromosome]
+                if newBlock in aDict:
+                    for element in aDict[newBlock]:
+                        if len(element) == 3:
+                            setForGenomeAndBlock.add(nameOfHighResBlocks[element])
+                    setForBlock |= setForGenomeAndBlock
+        """for genome in mergedSynBlocks:
+            for chromosome in mergedSynBlocks[genome]:
+                aDict, aAdjDict, tmpOverlap, fakesNum = mergedSynBlocks[genome][chromosome]
+                if newBlock in aDict:
+                    setForBlock &= aDict[newBlock]"""
+        print
+        print "Synteny block in low resolution:", elem
+        string = "High res blocks (from different genomes) that have overlaps with low-res block: "
+        for key in setForBlock:
+            string += str(key)
+            string += " "
+        print string
+        print
+        
+    
 
 
 
