@@ -6,14 +6,19 @@ __status__ = 'develop'
 
 
 class SyntenyBlock(object):
-    def __init__(self, name, start, end, strand):
+    def __init__(self, name, start, end, strand, chromosome=None):
         self.name = name
         self.start = start
         self.end = end
         self.strand = strand
+        self.chromosome = chromosome
 
     def __hash__(self):
         return self.name.__hash__()
+
+    @property
+    def genome(self):
+        return self.chromosome.genome
 
 
 class StartTelomereSyntenyBlock(SyntenyBlock):
