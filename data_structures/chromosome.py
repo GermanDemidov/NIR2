@@ -55,10 +55,11 @@ class Chromosome(object):
         return result[1:] if len(result) > 0 else result
 
     def get_two_closest_mappings_and_relative_position(self, sb, res_to_map):
-        position = 0
+        l_position, r_position = 0
         if res_to_map in self.mapping[sb]:
-            return sb, sb, position
+            return sb, sb, l_position, r_position
         for value in self.blocks.value_slice(start_key=(sb.start, sb.end)):
+            r_position += 1
             if res_to_map in self.mapping[value]:
                 right_closest_mapping = value
                 break
@@ -66,13 +67,13 @@ class Chromosome(object):
             right_closest_mapping = self.end_telomer
         for value in self.blocks.value_slice(end_key=(sb.start, sb.end),
                                              reverse=True):
-            position += 1
+            l_position += 1
             if res_to_map in self.mapping[value]:
                 left_closest_mapping = value
                 break
         else:
             left_closest_mapping = self.start_telomer
-        return left_closest_mapping, right_closest_mapping, position
+        return left_closest_mapping, right_closest_mapping, l_position, r_position
 
     def __hash__(self):
         return self.name.__hash__()

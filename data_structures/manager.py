@@ -28,10 +28,10 @@ class Manager(object):
         if genome_name in self.resolutions[res1] and genome_name in self.resolutions[res2]:
             genome = self.resolutions[res1][genome_name]
             mapped_genome = self.resolutions[res2][genome_name]
-            l_map, r_map, offset = genome.get_mapping_and_offset_for_sb(sb_name, res2)
+            l_map, r_map, l_offset, r_offset = genome.get_mapping_and_offset_for_sb(sb_name, res2)
             if l_map == r_map:
                 return set()
-            return mapped_genome.get_mapped_set(sb_start=l_map, sb_end=r_map, offset=offset)
+            return mapped_genome.get_mapped_set(sb_start=l_map, sb_end=r_map, l_offset=l_offset, r_offset=r_offset)
 
 
 
