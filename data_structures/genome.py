@@ -32,8 +32,20 @@ class Genome(object):
         chromosome = Chromosome(name=chromosome_name, genome=self)
         self._add_chromosome(chromosome)
 
+    def add_mapping(self, res, sb_name, mapped_sequence):
+        chromosome = self.location_info[sb_name]
+        chromosome.add_mapping(sb_name, res, mapped_sequence)
+
+    def retrieve_sb_by_name(self, *args):
+        result = []
+        for entry in args:
+            chromosome = self.location_info[entry]
+            result.append(chromosome.sb_name_mapping[entry])
+        return result
+
     def get_mapping_and_offset_for_sb(self, sb, res_to_map):
         chromosome = self.location_info[sb]
+        sb = chromosome.sb_name_mapping[sb]
         l_map, r_map, l_offset, r_offset = chromosome.get_two_closest_mappings_and_relative_position(sb=sb,
                                                                                                      res_to_map=res_to_map)
         if l_map == r_map:
