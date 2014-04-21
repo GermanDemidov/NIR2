@@ -24,14 +24,22 @@ class Manager(object):
         genome = self.resolutions[resolution_name][genome_name]
         genome.add_sb(chromosome_name, sb_info)
 
+    def add_mapping(self, genome_name, res1, res2, sb_name, mapped_sequence):
+        assert genome_name in self.resolutions[res1] and genome_name in self.resolutions[res2]
+        mapping_genome = self.resolutions[res1][genome_name]
+        mapped_genome = self.resolutions[res2][genome_name]
+        mapped_sequence = mapped_genome.retrieve_sb_by_name(*mapped_sequence)
+        mapping_genome.add_mapping(res2, sb_name, mapped_sequence)
+
     def get_mapping_set_for_sb(self, genome_name, sb_name, res1, res2):
         if genome_name in self.resolutions[res1] and genome_name in self.resolutions[res2]:
             genome = self.resolutions[res1][genome_name]
             mapped_genome = self.resolutions[res2][genome_name]
             l_map, r_map, l_offset, r_offset = genome.get_mapping_and_offset_for_sb(sb_name, res2)
             if l_map == r_map:
-                return set()
-            return mapped_genome.get_mapped_set(sb_start=l_map, sb_end=r_map, l_offset=l_offset, r_offset=r_offset)
+                return set(l_map)
+            return mapped_genome.get_mapped_set(sb_start=l_map, sb_end=r_map, l_offset=l_offset,
+                                                r_offset=r_offset if r_offset > 0 else None)
 
 
 
