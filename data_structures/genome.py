@@ -59,4 +59,4 @@ class Genome(object):
         chromosome1, chromosome2 = self.location_info[sb_start], self.location_info[sb_end]
         assert chromosome1 == chromosome2
         vague_mapping = chromosome1.get_sbs_between(sb_start=sb_start, sb_end=sb_end)
-        return set(vague_mapping[l_offset:r_offset])
+        return set(vague_mapping[l_offset:-r_offset if r_offset is not None else r_offset])
