@@ -12,6 +12,7 @@ class Chromosome(object):
     def __init__(self, name, genome):
         self.name = name
         self.genome = genome
+        self.sb_name_mapping = {}
         self.start_telomer = StartTelomereSyntenyBlock()
         self.end_telomer = EndTelomereSyntenyBlock()
         self.blocks = AVLTree()
@@ -25,6 +26,8 @@ class Chromosome(object):
     def add_sb(self, sb):
         if not type(sb, SyntenyBlock):
             sb = self._create_sb(sb)
+        self.genome.location_info[sb] = self
+        self.sb_name_mapping[sb] = sb
         self.blocks.insert(key=(sb.start, sb.end), value=sb)
 
     def _create_sb(self, info):
