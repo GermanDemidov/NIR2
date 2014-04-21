@@ -43,10 +43,14 @@ class Chromosome(object):
     def get_right_outer_most_mapping(self, sb, mapping):
         if sb in self.mapping and mapping in self.mapping[sb]:
             return self.mapping[sb][mapping][-1]
+        else:
+            return self.start_telomer
 
     def get_left_outer_most_mapping(self, sb, mapping):
         if sb in self.mapping and mapping in self.mapping[sb]:
             return self.mapping[sb][mapping][0]
+        else:
+            return self.end_telomer
 
     def get_sbs_between(self, sb_start, sb_end):
         # slice from 1: because, value_slice returns all values, which keys are greater or equals that minimum,
