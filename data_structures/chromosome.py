@@ -13,8 +13,8 @@ class Chromosome(object):
         self.name = name
         self.genome = genome
         self.sb_name_mapping = {}
-        self.start_telomer = StartTelomereSyntenyBlock()
-        self.end_telomer = EndTelomereSyntenyBlock()
+        self.start_telomer = StartTelomereSyntenyBlock(name)
+        self.end_telomer = EndTelomereSyntenyBlock(name)
         self.blocks = AVLTree()
         self.add_sb(self.start_telomer)
         self.add_sb(self.end_telomer)
@@ -24,17 +24,25 @@ class Chromosome(object):
         self.mapping = defaultdict(lambda: defaultdict(list))
 
     def add_sb(self, sb):
-        if not type(sb, SyntenyBlock):
+        if not isinstance(sb, SyntenyBlock):
             sb = self._create_sb(sb)
         self.genome.location_info[sb] = self
         self.sb_name_mapping[sb] = sb
         self.blocks.insert(key=(sb.start, sb.end), value=sb)
 
     def _create_sb(self, info):
+        """
+        example:
         sb = SyntenyBlock(name=info.name,
                           start=info.start,
                           end=info.end,
                           strand=info.strand,
+                          chromosome=self)
+                          """
+        sb = SyntenyBlock(name=info[0],
+                          start=info[1],
+                          end=info[2],
+                          strand=info[3],
                           chromosome=self)
         return sb
 
@@ -82,4 +90,7 @@ class Chromosome(object):
 
     def __hash__(self):
         return self.name.__hash__()
+
+    def __str__(self):
+        return str(self.blocks)
 

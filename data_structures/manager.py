@@ -12,7 +12,7 @@ class Manager(object):
         self.resolutions = defaultdict(dict)
 
     def _add_genome(self, genome, resolution_name):
-        self.resolutions[resolution_name][genome] = genome
+        self.resolutions[resolution_name][genome.name] = genome
 
     def _create_and_add_genome(self, genome_name, resolution_name):
         genome = Genome(name=genome_name, manager=self, resolution=resolution_name)
@@ -40,6 +40,15 @@ class Manager(object):
                 return set(l_map)
             return mapped_genome.get_mapped_set(sb_start=l_map, sb_end=r_map, l_offset=l_offset,
                                                 r_offset=r_offset if r_offset > 0 else None)
+
+    def __str__(self):
+        string_representation = ""
+        for res, genomedict in self.resolutions.iteritems():
+            string_representation += "Resolution: " + res + "\n"
+            for genome in genomedict:
+                string_representation += (str(genomedict[genome]))
+        return string_representation
+        
 
 
 

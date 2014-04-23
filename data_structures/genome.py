@@ -26,7 +26,7 @@ class Genome(object):
         chromosome.add_sb(sb)
 
     def _add_chromosome(self, chromosome):
-        self.chromosomes[chromosome] = chromosome
+        self.chromosomes[chromosome.name] = chromosome
 
     def _create_and_add_chromosome(self, chromosome_name):
         chromosome = Chromosome(name=chromosome_name, genome=self)
@@ -60,3 +60,10 @@ class Genome(object):
         assert chromosome1 == chromosome2
         vague_mapping = chromosome1.get_sbs_between(sb_start=sb_start, sb_end=sb_end)
         return set(vague_mapping[l_offset:-r_offset if r_offset is not None else r_offset])
+
+    def __str__(self):
+        string_representation = "\n"
+        string_representation += self.name + "\n"
+        for chr_name, chr_content in self.chromosomes.iteritems():
+            string_representation += "\n" + chr_name + "\n" + str(chr_content)
+        return string_representation
